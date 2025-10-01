@@ -1,0 +1,26 @@
+- [ ] database manager
+    - [x] writing database
+    - [x] reading database
+    - [ ] event log
+    - [ ] playlist registry
+    - [ ] adding new artists
+    - [ ] adding new albums
+    - [ ] adding new tracks
+    - [ ] id generation
+    - [ ] search system
+    - [ ] database version control
+- [ ] playlist system
+    - [ ] symlink folder generation
+- [ ] user interface
+    - [ ] artist/album/track browsing
+    - [ ] playlist building
+    - [ ] file metadata editing
+    - [ ] album import
+        - [ ] files
+        - [ ] cd
+        - [ ] bandcamp direct
+    - [ ] search interface
+    - [ ] sorting
+    - [ ] export summary of library/playlist/album
+- [ ] modification history
+- [ ] file structure generation, system config files
