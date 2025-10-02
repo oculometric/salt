@@ -14,3 +14,16 @@ HorizontalBox (children = {
     BorderedBox : "container_box" (name = "...", child = SizeLimiter(max_size = [-1, -1]))
 })
 )V0G0N";
+
+const char* library_page_str = 
+R"V0G0N(
+VerticalBox (children = {
+    TabDisplay : "tabs" (tab_descriptions = { "library", "search", "import", "config" }),
+    HorizontalBox (children = {
+        SizeLimiter (max_size = [24, -1], child = ListView : "menu" (elements = { "first", "second" })),
+        VerticalDivider (),
+        TextArea : "detail_area" (text = "details go here")
+    }),
+    Label (text = "shortcut hints")
+})
+)V0G0N";
