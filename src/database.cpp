@@ -181,6 +181,33 @@ bool Database::saveDatabase(string filename)
     return true;
 }
 
+vector<Artist*> Database::enumerateArists()
+{
+    vector<Artist*> arr;
+    for (auto& pair : artists)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
+vector<Album*> Database::enumerateAlbums()
+{
+    vector<Album*> arr;
+    for (auto& pair : albums)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
+vector<Track*> Database::enumerateTracks()
+{
+    vector<Track*> arr;
+    for (auto& pair : tracks)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
 bool Database::loadDatabase(string filename)
 {
     artists.clear();
