@@ -12,11 +12,13 @@ private:
 
     stui::ListView* artist_list;
     stui::Label* artist_count_label;
-    stui::TextArea* artist_detail_area;
+    stui::PropertyView* artist_detail_area;
     stui::ListView* artist_album_list;
 
     stui::ListView* album_list;
     stui::Label* album_count_label;
+    stui::PropertyView* album_detail_area;
+    stui::ListView* album_track_list;
 
     stui::ListView* playlist_list;
 
@@ -31,6 +33,7 @@ public:
 
 private:
     static void libraryTabChanged(int o, int n);
+    static void albumSelectedFromArtist();
     static bool refreshShortcut();
 
     void updateCurrentPageDetails();

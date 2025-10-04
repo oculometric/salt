@@ -8,6 +8,7 @@ using namespace std;
 Database::Database()
 {
     artists[0] = Artist{ 0, "jimbo", { 33, 34 } };
+    artists[2] = Artist{ 2, "THE REAPER", { 34 } };
     albums[33] = Album{ 33, "the 33rd album", Source{ SourceType::CD, "33rd Album" }, Storage{ false, "the_33rd_album" }, 12345, { 0 }, { 0, 1, 2 } };
     tracks[0] = Track{ 0, "track 0", Source{ SourceType::SAME_AS_ALBUM }, Storage{ false, "the_33rd_album/track_0.mp3" }, { 0 }, 33, 1 };
     tracks[1] = Track{ 1, "track 1", Source{ SourceType::SAME_AS_ALBUM }, Storage{ false, "the_33rd_album/track_1.mp3" }, { 0 }, 33, 2 };
@@ -181,33 +182,6 @@ bool Database::saveDatabase(string filename)
     return true;
 }
 
-vector<Artist*> Database::enumerateArists()
-{
-    vector<Artist*> arr;
-    for (auto& pair : artists)
-        arr.push_back(&(pair.second));
-    
-    return arr;
-}
-
-vector<Album*> Database::enumerateAlbums()
-{
-    vector<Album*> arr;
-    for (auto& pair : albums)
-        arr.push_back(&(pair.second));
-    
-    return arr;
-}
-
-vector<Track*> Database::enumerateTracks()
-{
-    vector<Track*> arr;
-    for (auto& pair : tracks)
-        arr.push_back(&(pair.second));
-    
-    return arr;
-}
-
 bool Database::loadDatabase(string filename)
 {
     artists.clear();
@@ -324,4 +298,82 @@ bool Database::loadDatabase(string filename)
     delete[] file_data;
 
     return true;
+}
+
+vector<Artist*> Database::enumerateArists()
+{
+    vector<Artist*> arr;
+    for (auto& pair : artists)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
+vector<Album*> Database::enumerateAlbums()
+{
+    vector<Album*> arr;
+    for (auto& pair : albums)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
+vector<Track*> Database::enumerateTracks()
+{
+    vector<Track*> arr;
+    for (auto& pair : tracks)
+        arr.push_back(&(pair.second));
+    
+    return arr;
+}
+
+vector<Album*> Database::getAlbumsByArtist(EntryID artist)
+{
+    auto it = artists.find(artist);
+    if (it == artists.end())
+        return { };
+    return getAlbumsByArtist(&(it->second));
+}
+
+vector<Album*> Database::getAlbumsByArtist(Artist* artist)
+{
+    vector<Album*> artist_albums; artist_albums.reserve(artist->albums.size());
+    for (EntryID id : artist->albums)
+        artist_albums.push_back(&(albums[id]));
+
+    return artist_albums;
+}
+
+vector<Track*> Database::getTracksInAlbum(EntryID album)
+{
+    auto it = albums.find(album);
+    if (it == albums.end())
+        return { };
+    return getTracksInAlbum(&(it->second));
+}
+
+vector<Track*> Database::getTracksInAlbum(Album* album)
+{
+    vector<Track*> album_tracks; album_tracks.reserve(album->tracks.size());
+    for (EntryID id : album->tracks)
+        album_tracks.push_back(&(tracks[id]));
+
+    return album_tracks;
+}
+
+vector<Artist*> Database::getArtistsofAlbum(EntryID album)
+{
+    auto it = albums.find(album);
+    if (it == albums.end())
+        return { };
+    return getArtistsofAlbum(&(it->second));
+}
+
+vector<Artist*> Database::getArtistsofAlbum(Album* album)
+{
+    vector<Artist*> album_artists; album_artists.reserve(album->artists.size());
+    for (EntryID id : album->artists)
+        album_artists.push_back(&(artists[id]));
+
+    return album_artists;
 }

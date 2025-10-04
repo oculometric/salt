@@ -1,5 +1,7 @@
 #include "ui_library.h"
 
+#include <chrono>
+
 #include "database.h"
 
 static const char* library_page_str = 
@@ -14,8 +16,8 @@ VerticalBox (children = {
             })),
             VerticalDivider (),
             VerticalBox (children = {
-                TextArea : "artist_detail_area" (text = "artist details go here"),
-                ListView : "artist_album_list" (elements = { "the 33rd album", "the 34th album" })
+                BorderedBox (child = PropertyView : "artist_detail_area" (keys = { "artist" }), name = "details"),
+                BorderedBox (child = ListView : "artist_album_list" (elements = { "theaeaegaeg 33rd album", "the 34taegaegah album" }), name = "albums")
             })
         }),
         HorizontalBox (children = {
@@ -24,7 +26,10 @@ VerticalBox (children = {
                 Label : "album_count" (text = "1/10", alignment = 1)
             })),
             VerticalDivider (),
-            TextArea : "album_detail_area" (text = "album details go here")
+            VerticalBox (children = {
+                BorderedBox (child = PropertyView : "album_detail_area" (keys = { "album", "artist", "date", "duration", "source" }), name = "details"),
+                BorderedBox (child = ListView : "album_track_list" (elements = { "track 1 trillion" }), name = "tracks")
+            })
         }),
         HorizontalBox (children = {
             SizeLimiter (max_size = [24, -1], child = ListView : "playlist_list" (elements = { "first playlist", "second", "third" }, show_numbers = 0, enabled = 0)),
@@ -45,7 +50,6 @@ VerticalBox (children = {
     // TODO: the import shortcut will change to 'create' when the playlists tab is selected, and will not be visible when the artists tab is selected
     // TODO: the search and import shortcuts will jump to their own pages
     // TODO: the export shortcut will only be visible if playlists is selected
-    // TODO: there will be a summary of how many albums you own
     // TODO: each tab child will show different stuff depending whether its albums, artists, playlists, or tracks
     // TODO: the config page will show initially or when the config shortcut is pressed
 })
@@ -76,15 +80,21 @@ LibraryUI::LibraryUI(Database* _database)
     
     artist_list = library_page->get<stui::ListView>("artist_list");
     artist_count_label = library_page->get<stui::Label>("artist_count");
-    artist_detail_area = library_page->get<stui::TextArea>("artist_detail_area");
+    artist_detail_area = library_page->get<stui::PropertyView>("artist_detail_area");
     artist_album_list = library_page->get<stui::ListView>("artist_album_list");
+    artist_album_list->callback = albumSelectedFromArtist;
     album_list = library_page->get<stui::ListView>("album_list");
     album_count_label = library_page->get<stui::Label>("album_count");
+    album_detail_area = library_page->get<stui::PropertyView>("album_detail_area");
+    album_track_list = library_page->get<stui::ListView>("album_track_list");
     playlist_list = library_page->get<stui::ListView>("playlist_list");
     track_list = library_page->get<stui::ListView>("track_list");
     track_count_label = library_page->get<stui::Label>("track_count");
 
-    library_page->focusable_component_sequence = { tabs, artist_list, artist_detail_area, artist_album_list, album_list, playlist_list, track_list };
+    library_page->focusable_component_sequence = { tabs, 
+        artist_list, artist_detail_area, artist_album_list, 
+        album_list, album_detail_area, album_track_list,
+        playlist_list, track_list };
     library_page->shortcuts = 
     {
         stui::Input::Shortcut{ stui::Input::Key{ 'R', stui::Input::CTRL }, LibraryUI::refreshShortcut }
@@ -95,7 +105,7 @@ LibraryUI::LibraryUI(Database* _database)
         //stui::Input::Shortcut{ stui::Input::Key{ ',', stui::Input::CTRL }, nullptr }
     };
 
-    //refreshShortcut();
+    refreshShortcut();
 }
 
 LibraryUI::~LibraryUI()
@@ -107,7 +117,23 @@ LibraryUI::~LibraryUI()
 
 void LibraryUI::libraryTabChanged(int o, int n)
 {
+    //ui->updateCurrentPageDetails();
+}
 
+void LibraryUI::albumSelectedFromArtist()
+{
+    // FIXME: a lot of stuff should be cached!!!
+    auto artist = ui->database->enumerateArists()[ui->artist_list->selected_index];
+    auto albums = ui->database->getAlbumsByArtist(artist);
+    auto selected_album = albums[ui->artist_album_list->selected_index];
+
+    int i;
+    for (i = 0; i < static_cast<int>(ui->album_list->elements.size()); i++)
+        if (ui->album_list->elements[i] == selected_album->name)
+            break;
+    ui->album_list->selected_index = i;
+    ui->tabs->setTab(1); // switch to album tab and set focus to be on album list
+    ui->library_page->setFocusIndex(4);
 }
 
 bool LibraryUI::refreshShortcut()
@@ -138,6 +164,7 @@ void LibraryUI::refreshArtists()
     auto artists = database->enumerateArists();
 
     vector<string> artist_names;
+    artist_list->elements.clear();
     for (auto artist : artists)
         artist_names.push_back(artist->name);
     
@@ -148,7 +175,14 @@ void LibraryUI::updateArtistDetails()
 {
     artist_count_label->text = to_string(artist_list->selected_index + 1) + '/' + to_string(artist_list->elements.size());
 
-    // TODO: populate right-panel info about artist
+    auto artist = database->enumerateArists()[artist_list->selected_index];
+
+    artist_detail_area->elements["artist"] = artist->name;
+    
+    auto albums = database->getAlbumsByArtist(artist);
+    artist_album_list->elements.clear();
+    for (auto album : albums)
+        artist_album_list->elements.push_back(album->name);
 }
 
 void LibraryUI::refreshAlbums()
@@ -167,7 +201,29 @@ void LibraryUI::updateAlbumDetails()
 {
     album_count_label->text = to_string(album_list->selected_index + 1) + '/' + to_string(album_list->elements.size());
 
-    // TODO: populate right-panel info about album
+    auto album = database->enumerateAlbums()[album_list->selected_index];
+    
+    auto tracks = database->getTracksInAlbum(album);
+    album_track_list->elements.clear();
+    for (auto track : tracks)
+        album_track_list->elements.push_back(track->name);
+
+    album_detail_area->elements["album"] = album->name;
+
+    string artist_str;
+    auto artists = database->getArtistsofAlbum(album);
+    for (auto artist : artists)
+    {
+        artist_str += artist->name;
+        artist_str += ", ";
+    }
+    artist_str.pop_back();
+    artist_str.pop_back();
+    album_detail_area->elements["artist"] = artist_str;
+
+    album_detail_area->elements["date"] = to_string(album->date);
+
+    album_detail_area->elements["source"] = album->source.reference;
 }
 
 void LibraryUI::refreshPlaylists()
